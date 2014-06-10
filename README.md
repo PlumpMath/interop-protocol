@@ -26,3 +26,5 @@ The interoperability protocol is done in three steps:
 1. User A invites User B to its folder located in Personal Cloud A.
 2. Personal Cloud A creates the sharing proposal.
 3. Personal Cloud A sends the access credentials to Personal Cloud B.
+
+![Interoperability process](https://raw.githubusercontent.com/cloudspaces/interop-protocol/master/images/interop_process.png)
