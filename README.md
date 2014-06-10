@@ -95,7 +95,7 @@ Personal Cloud A specifies what type of authentication protocol and version must
 Field | Type | Description
 --- | --- | ---
 **share_id** | `string` | A randomly generated value that uniquely identifies the interoperability proposal.
-**auth_protocol** | `string` | The authentication protocol used to access the shared resource (e.g. oauth).
+**auth_protocol** | `string` | The authentication protocol used to access the shared resource (e.g. `oauth`).
 denied. true and false are the only possible values.
 **auth_protocol_version** | `string` | The version of the authentication protocol (e.g. 1.0a).
 
