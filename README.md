@@ -58,10 +58,10 @@ Field | Type | Description
 **owner_name** | `string` | The name corresponding to the owner of the folder.
 **owner_email** | `string` | The email corresponding to the owner of the folder.
 **folder_name** | `string` | The name of the folder.
-**permission** | `string` | Permissions granted to the recipient. Options are READ-ONLY and READ-WRITE.
+**permission** | `string` | Permissions granted to the recipient. Options are `read-only` and `read-write`.
 **recipient** | `string` | The email corresponding to the user who the folder has been shared with.
 **callback** | `string` | An absolute URL to which the Personal Cloud B will redirect the User back when the invitation step is completed.
-**protocol_version** | `string` | MUST be set to 1.0. Services MUST assume the protocol version to be 1.0 if this parameter is not present.
+**protocol_version** | `string` | MUST be set to `1.0`. Services MUST assume the protocol version to be `1.0` if this parameter is not present.
 
 
 ## Invitation acceptance
@@ -80,7 +80,7 @@ Personal Cloud B uses the callback to construct an HTTP GET request, and directs
 Field | Type | Description
 --- | --- | ---
 **share_id** | `string` | A randomly generated value that uniquely identifies the interoperability proposal.
-**accepted** | `string` | A string indicating whether the invitation has been accepted or denied. true and false are the only possible values.
+**accepted** | `string` | A string indicating whether the invitation has been accepted or denied. `true` and `false` are the only possible values.
 
 
 ## Access credentials
@@ -94,7 +94,7 @@ Personal Cloud A specifies what type of authentication protocol and version must
 Field | Type | Description
 --- | --- | ---
 **share_id** | `string` | A randomly generated value that uniquely identifies the interoperability proposal.
-**auth_protocol** | `string` | The authentication protocol used to access the shared resource (e.g.oauth)
-**auth_protocol_version** | `string` | The version of the authentication protocol (e.g. 1.0a).
+**auth_protocol** | `string` | The authentication protocol used to access the shared resource (e.g.`oauth`)
+**auth_protocol_version** | `string` | The version of the authentication protocol (e.g. `1.0a`).
 
 Other authentication-specific parameters are sent together with the above parameters, these parameters may include values like tokens, timestamps or signatures.
