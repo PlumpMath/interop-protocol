@@ -15,9 +15,9 @@ Having two Personal Clouds (Personal Cloud 1 and Personal Cloud 2) that wish to 
 
 The interoperability protocol defines three endpoints that will be detailed below:
 
-* Share. The URL used to present the interoperability proposal to the user and obtain authorization.
-* Unshare. The URL used to finish the interoperability agreement.
-* Credentials. The URL used to provide the access credentials.
+* **Share**. The URL used to present the interoperability proposal to the user and obtain authorization.
+* **Unshare**. The URL used to finish the interoperability agreement.
+* **Credentials**. The URL used to provide the access credentials.
 
 ## Interoperability process overview
 
@@ -80,8 +80,7 @@ Personal Cloud B uses the callback to construct an HTTP GET request, and directs
 Field | Type | Description
 --- | --- | ---
 **share_id** | `string` | A randomly generated value that uniquely identifies the interoperability proposal.
-**accepted** | `string` | A string indicating whether the invitation has been accepted or
-denied. true and false are the only possible values.
+**accepted** | `string` | A string indicating whether the invitation has been accepted or denied. true and false are the only possible values.
 
 
 ## Access credentials
@@ -95,8 +94,7 @@ Personal Cloud A specifies what type of authentication protocol and version must
 Field | Type | Description
 --- | --- | ---
 **share_id** | `string` | A randomly generated value that uniquely identifies the interoperability proposal.
-**auth_protocol** | `string` | The authentication protocol used to access the shared resource (e.g. `oauth`).
-denied. true and false are the only possible values.
+**auth_protocol** | `string` | The authentication protocol used to access the shared resource (e.g.oauth)
 **auth_protocol_version** | `string` | The version of the authentication protocol (e.g. 1.0a).
 
 Other authentication-specific parameters are sent together with the above parameters, these parameters may include values like tokens, timestamps or signatures.
