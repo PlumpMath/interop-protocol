@@ -49,7 +49,7 @@ def proposal_select(request, key):
 
             url = '%s?%s' % (service.endpoint_share, urllib.urlencode(params))
 
-            return HttpResponse(content=url)
+            return HttpResponseRedirect(url)
         error = True
 
     form = InteropServiceForm()
@@ -63,7 +63,7 @@ def proposal_view(request, key):
 
     proposal = get_object_or_404(SharingProposal, key=key)
 
-    if proposal.status != 'SENT':
+    if proposal.status != 'PENDING':
         return HttpResponseBadRequest('Proposal status is not valid')
 
     if request.POST:
