@@ -1,0 +1,21 @@
+
+{% extends "base.html" %}
+
+{% block title %}CloudSpaces - Proposal{% endblock %}
+
+{% block content %}
+
+<h2>You have a new sharing request</h2>
+<hr />
+
+<p><strong>{{ proposal.owner.name }}</strong> ({{ proposal.owner.email }}) is willing to share this folder with you:</p>
+
+<h4><span class="glyphicon glyphicon-folder-open"> </span> {{ proposal.folder.name }}</h4>
+
+<form id="target" role="form" action="{% url "proposal_view" proposal.key %}" method="post">
+    {% csrf_token %}
+    <button id="send-accept" name="accept" type="submit" class="btn btn-success">Accept</button>
+    <button id="send-decline" name="decline" type="submit"  class="btn btn-danger">Decline</button>
+</form>
+
+{% endblock %}
