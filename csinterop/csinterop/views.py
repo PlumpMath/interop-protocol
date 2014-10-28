@@ -167,7 +167,7 @@ def proposal_result(request):
         return HttpResponse(content='Proposal was denied')
 
 
-def proposal_share(request):
+def proposal_credentials(request):
     share_id = request.GET.get('share_id')
     auth_protocol = request.GET.get('auth_protocol')
     auth_protocol_version = request.GET.get('auth_protocol_version')
