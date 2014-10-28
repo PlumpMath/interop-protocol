@@ -74,7 +74,7 @@ def proposal_view(request, key):
             proposal.status = 'DECLINED'
         proposal.save()
 
-        redirect_url = url_with_querystring(proposal.callback, accepted=accepted, share_id=proposal.remote_key)
+        redirect_url = url_with_querystring(proposal.callback, accepted=accepted, share_id=proposal.key)
         return HttpResponseRedirect(redirect_url)
 
     return render(request, 'proposal_view.html', {'proposal': proposal})
