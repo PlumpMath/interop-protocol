@@ -19,7 +19,6 @@ def url_with_querystring(path, **kwargs):
 
 
 def proposal_select(request, key):
-
     proposal = get_object_or_404(SharingProposal, key=key)
 
     if proposal.status != 'CREATED':
@@ -58,7 +57,6 @@ def proposal_select(request, key):
 
 
 def proposal_view(request, key):
-
     #TODO: user must be logged in to see the proposal
 
     proposal = get_object_or_404(SharingProposal, key=key)
@@ -81,7 +79,6 @@ def proposal_view(request, key):
 
 
 def proposal_share(request):
-
     share_id = request.GET.get('share_id')
     resource_url = request.GET.get('resource_url')
     owner_name = request.GET.get('owner_name')
@@ -156,11 +153,44 @@ def proposal_result(request):
 
     proposal = get_object_or_404(SharingProposal, key=share_id)
 
+    proposal.status = 'ACCEPTED' if accepted else 'DECLINED'
+    proposal.save()
+
     #TODO: create a thread to process acceptance/denial
 
     if accepted:
-        return HttpResponse(content='Proposal was accepted')
+        # Send the credentials
+        url = url_with_querystring(proposal.service.endpoint_credentials, share_id=proposal.key, auth_protocol='oauth',
+                                   auth_protocol_version='1.0a', oauth_access_token='2j42342')
+        return HttpResponseRedirect(url)
     else:
         return HttpResponse(content='Proposal was denied')
 
 
+def proposal_share(request):
+    share_id = request.GET.get('share_id')
+    auth_protocol = request.GET.get('auth_protocol')
+    auth_protocol_version = request.GET.get('auth_protocol_version')
+
+    if share_id is None:
+        return HttpResponseBadRequest('share_id is missing')
+
+    if auth_protocol is None:
+        return HttpResponseBadRequest('auth_protocol is missing')
+
+    if auth_protocol_version is None:
+        return HttpResponseBadRequest('auth_protocol_version is missing')
+
+    if auth_protocol == 'oauth' and auth_protocol_version == '1.0a':
+        # TODO: get oauth 1.0a parameters and save them for future use
+        # oauth_consumer_key
+        # oauth_token
+        # oauth_signature_method
+        # oauth_signature
+        # oauth_timestamp
+        # oauth_nonce
+        # (oauth_version)
+        return HttpResponse('Oauth parameters received and stored')
+    else:
+        # TODO: add other authentication methods
+        return HttpResponseBadRequest(content='Authentication method not supported')
