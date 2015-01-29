@@ -62,10 +62,10 @@ WSGI_APPLICATION = 'cloudspaces.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'stacksync',
+        'NAME': 'stacksync_db',
         'USER': 'stacksync_user',
-        'PASSWORD': 'stacksync',
-        'HOST': '127.0.0.1',
+        'PASSWORD': 'stacksync_pass',
+        'HOST': '10.30.233.214',
         'PORT': '5432',
     }
 }

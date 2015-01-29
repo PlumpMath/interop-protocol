@@ -10,6 +10,7 @@ from csinterop.serializers import SharingProposalSerializer
 
 
 class SharingProposalViewSet(viewsets.ModelViewSet):
+    print "Into SharingProposalViewSet"
     model = SharingProposal
     serializer_class = SharingProposalSerializer
 
@@ -19,6 +20,7 @@ def url_with_querystring(path, **kwargs):
 
 
 def proposal_select(request, key):
+
     proposal = get_object_or_404(SharingProposal, key=key)
 
     if proposal.status != 'CREATED':
