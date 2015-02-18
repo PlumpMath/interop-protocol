@@ -7,7 +7,15 @@ from rest_framework import viewsets
 from csinterop.forms import InteropServiceForm
 from csinterop.models import SharingProposal, User, Folder
 from csinterop.serializers import SharingProposalSerializer
+from django.conf import settings
+from oauthlib.common import urldecode, urlencode
+from oauthlib import oauth1
+from oauthlib.oauth1 import SIGNATURE_PLAINTEXT, SIGNATURE_TYPE_AUTH_HEADER, SIGNATURE_TYPE_BODY, SIGNATURE_TYPE_QUERY
+from urlparse import parse_qs
+import requests
 
+import xmlrpclib
+import json
 
 class SharingProposalViewSet(viewsets.ModelViewSet):
     print "Into SharingProposalViewSet"
@@ -18,6 +26,88 @@ class SharingProposalViewSet(viewsets.ModelViewSet):
 def url_with_querystring(path, **kwargs):
     return path + '?' + urllib.urlencode(kwargs)
 
+def create_credentials(email, password):
+    '''
+    - POST to /oauth/request to obtain the request token
+    '''    
+    client = oauth1.Client(settings.CLIENT_KEY,
+                           client_secret=settings.CLIENT_SECRET,
+                           signature_type=SIGNATURE_TYPE_BODY,
+                           signature_method=SIGNATURE_PLAINTEXT,
+                           callback_uri='oob')
+    
+    headers = {'Content-Type': 'application/x-www-form-urlencoded', 'StackSync-API':'v2'}
+
+    url = settings.BASE_URL + settings.REQUEST_TOKEN_ENDPOINT
+    uri, headers, body = client.sign(url,
+                                     headers=headers,
+                                     http_method='POST',
+                                     body='')
+    
+    r = requests.post(uri, body, headers=headers)
+
+    if r.status_code != 200:
+        return False
+
+    credentials = parse_qs(r.content)
+    oauth_request_token = credentials.get('oauth_token')[0]
+    oauth_request_token_secret = credentials.get('oauth_token_secret')[0]
+    
+    print 'oauth_request_token: ', oauth_request_token, ' oauth_request_token_secret', oauth_request_token_secret
+    
+    '''
+    POST to validator webpage to obtain the request token secret
+    '''    
+    authorize_url = settings.BASE_URL + settings.STACKSYNC_AUTHORIZE_ENDPOINT + '?oauth_token=' + oauth_request_token
+    params = urllib.urlencode({'email': email, 'password': password, 'permission':'allow'})
+    headers = {"Content-Type":"application/x-www-form-urlencoded", "StackSync-API":"v2"}
+    response = requests.post(authorize_url, data=params, headers=headers, verify=False)
+    if "application/x-www-form-urlencoded" == response.headers['Content-Type']:
+        
+        parameters = parse_qs(response.content)
+
+        verifier = parameters.get('verifier')[0]
+        print 'verifier: ', verifier
+
+        '''
+        Obtain the access tokens
+        '''
+        client = oauth1.Client(settings.CLIENT_KEY,
+                               client_secret=settings.CLIENT_SECRET,
+                               signature_type=SIGNATURE_TYPE_QUERY,
+                               signature_method=SIGNATURE_PLAINTEXT,
+                               resource_owner_key=oauth_request_token,
+                               resource_owner_secret=oauth_request_token_secret,
+                               verifier=verifier)
+        
+        url = settings.BASE_URL + settings.ACCESS_TOKEN_ENDPOINT
+        uri, headers, _ = client.sign(url,
+                                      http_method='GET')
+
+        headers['StackSync-API'] = "v2"
+        r = requests.get(uri, headers=headers)
+        print 'request access toquen: ', r.text 
+
+        if 200 < r.status_code >= 300:
+            return False
+        
+        credentials = parse_qs(r.content)
+
+        oauth_access_token = credentials.get('oauth_token')[0]
+
+        oauth_access_token_secret = credentials.get('oauth_token_secret')[0]
+
+        print 'oauth_access_token: ', oauth_access_token, ' oauth_access_token_secret', oauth_access_token_secret
+
+        
+    else:
+        return False
+
+        
+    return oauth_access_token, oauth_access_token_secret
+    
+    
+    
 
 def proposal_select(request, key):
 
@@ -39,9 +129,9 @@ def proposal_select(request, key):
             permission = 'read-write' if proposal.write_access else 'read-only'
             params = {'share_id': proposal.key,
                       'resource_url': proposal.resource_url,
-                      'owner_name': proposal.owner.name,
-                      'owner_email': proposal.owner.email,
-                      'folder_name': proposal.folder.name,
+                      'owner_name': proposal.owner_name,
+                      'owner_email': proposal.owner_email,
+                      'folder_name': proposal.folder_name,
                       'permission': permission,
                       'recipient': proposal.recipient,
                       'callback': proposal.callback,
@@ -59,7 +149,7 @@ def proposal_select(request, key):
 
 
 def proposal_view(request, key):
-    #TODO: user must be logged in to see the proposal
+    # TODO: user must be logged in to see the proposal
 
     proposal = get_object_or_404(SharingProposal, key=key)
 
@@ -140,7 +230,7 @@ def proposal_share(request):
     proposal.status = 'PENDING'
     proposal.save()
 
-    #TODO: check if the proposal was successfully saved
+    # TODO: check if the proposal was successfully saved
 
     url = reverse('proposal_view', args=(), kwargs={'key': proposal.key})
     return HttpResponseRedirect(url)
@@ -157,13 +247,35 @@ def proposal_result(request):
 
     proposal.status = 'ACCEPTED' if accepted else 'DECLINED'
     proposal.save()
-
-    #TODO: create a thread to process acceptance/denial
-
+    
+    print 'after save proposal'
+    # TODO: create a thread to process acceptance/denial
+    
+    rpc_server = xmlrpclib.ServerProxy("http://" + settings.SYNCSERVICE_IP + ':' + str(settings.SYNCSERVICE_PORT))
+    response = rpc_server.XmlRpcSyncHandler.addExternalUserToWorkspace(str(share_id))
+    dict_response = json.loads(response)
+    try:
+        password = dict_response['user'][0]['pass']
+        username = dict_response['user'][0]['name']
+    except:
+        return HttpResponseBadRequest(content=response)
+#     password = "mpf17tp45jascoq9q65fk0coe6"
+#     username = "cesk002@gmail.com"
+    if password == "" or username == "":
+        return HttpResponseBadRequest(content=response)
+        return False
+    
     if accepted:
+        # create credentials
+        oauth_access_token, oauth_access_token_secret = create_credentials(proposal.recipient, password)
+        
+        if not oauth_access_token or not oauth_access_token_secret:
+            return HttpResponse(content='Error occurred while generating the credentials')
+
         # Send the credentials
         url = url_with_querystring(proposal.service.endpoint_credentials, share_id=proposal.key, auth_protocol='oauth',
-                                   auth_protocol_version='1.0a', oauth_access_token='2j42342')
+                                   auth_protocol_version='1.0a', oauth_access_token=oauth_access_token, oauth_access_token_secret=oauth_access_token_secret)
+        
         return HttpResponseRedirect(url)
     else:
         return HttpResponse(content='Proposal was denied')

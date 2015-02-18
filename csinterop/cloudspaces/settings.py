@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'rest_framework',
     'bootstrap3',
+    'django_pg',
     'csinterop',
 )
 
@@ -101,3 +102,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+
+SYNCSERVICE_IP = '127.0.0.1'
+SYNCSERVICE_PORT = 61234
+
+#OAuth Authentication Server
+BASE_URL = "http://10.30.233.214:8080/oauth"
+CLIENT_KEY = "b3af4e669daf880fb16563e6f36051b105188d413"
+CLIENT_SECRET = "c168e65c18d75b35d8999b534a3776cf"
+REQUEST_TOKEN_ENDPOINT = "/request_token"
+ACCESS_TOKEN_ENDPOINT = "/access_token"
+STACKSYNC_AUTHORIZE_ENDPOINT = "/authorize"
+
