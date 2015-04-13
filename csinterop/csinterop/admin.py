@@ -1,5 +1,5 @@
 from django.contrib import admin
-from csinterop.models import SharingProposal, User, Folder, InteropService
+from csinterop.models import SharingProposal, InteropService
 
 
 class SharingProposalAdmin(admin.ModelAdmin):
@@ -19,6 +19,4 @@ class InteropServiceAdmin(admin.ModelAdmin):
 
 
 admin.site.register(SharingProposal, SharingProposalAdmin)
-admin.site.register(User, UserAdmin)
-admin.site.register(Folder, FolderAdmin)
 admin.site.register(InteropService, InteropServiceAdmin)

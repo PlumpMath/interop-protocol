@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from csinterop.models import SharingProposal, Folder, User
+from csinterop.models import SharingProposal
 
 
 class SharingProposalSerializer(serializers.ModelSerializer):

@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, render
 from django.core.urlresolvers import reverse
 from rest_framework import viewsets
 from csinterop.forms import InteropServiceForm
-from csinterop.models import SharingProposal, User, Folder
+from csinterop.models import SharingProposal
 from csinterop.serializers import SharingProposalSerializer
 from django.conf import settings
 from oauthlib.common import urldecode, urlencode
@@ -218,13 +218,9 @@ def proposal_share(request):
     proposal.recipient = recipient
     proposal.callback = callback
     proposal.protocol_version = protocol_version
-    owner = User()
-    owner.name = owner_name
-    owner.email = owner_email
-    proposal.owner = owner
-    folder = Folder()
-    folder.name = folder_name
-    proposal.folder = folder
+    proposal.owner_name = owner_name
+    proposal.owner_email = owner_email
+    proposal.folder_name = folder_name
     write_access = True if permission.lower() is 'read-write' else False
     proposal.write_access = write_access
     proposal.status = 'PENDING'
