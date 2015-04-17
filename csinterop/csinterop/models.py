@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django_pg import models as modelspg
+from numpy import unique
 
 
 class InteropService(models.Model):
@@ -18,19 +19,19 @@ class InteropService(models.Model):
         return self.name
 
 
-# class User(models.Model):
-# 
-#     name = models.CharField(max_length=200)
-#     email = models.CharField(max_length=200)
-#     enabled = models.BooleanField(default=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now_add=True)
-# 
-#     class Meta:
-#         db_table = 'cloudspaces_user'
-# 
-#     def __unicode__(self):
-#         return self.name
+class User(models.Model):
+    key = modelspg.UUIDField(unique=True, default=uuid.uuid4)
+    name = models.CharField(max_length=200)
+    swift_name = models.CharField(max_length=200)
+    email = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        db_table = 'cloudspaces_user'
+ 
+    def __unicode__(self):
+        return self.name
 # 
 # 
 # class Folder(models.Model):
@@ -51,7 +52,7 @@ class SharingProposal(models.Model):
     is_local = models.BooleanField(default=True)
     service = models.ForeignKey(InteropService, related_name='service', blank=True, null=True)
     resource_url = models.CharField(max_length=200)
-    owner = modelspg.UUIDField(max_length=200, blank=True, null=True,  default=uuid.uuid4)
+    owner = modelspg.UUIDField(max_length=200, blank=True, null=True, unique=False, default=uuid.uuid4)
     owner_name = models.CharField(max_length=200)
     owner_email = models.CharField(max_length=200)
     folder = models.CharField(max_length=200, blank=True, null=True,  default=uuid.uuid4)
@@ -76,3 +77,14 @@ class SharingProposal(models.Model):
 
     def __unicode__(self):
         return self.key
+    
+class OauthV1Credentials(models.Model):
+    user = models.CharField(max_length=200)
+    access_token_key = models.CharField(max_length=200)
+    access_token_secret = models.CharField(max_length=200)
+
+    class Meta:
+        db_table = 'cloudspaces_oauth1.0_credentials'
+    
+    def __unicode__(self):
+        return self.owner

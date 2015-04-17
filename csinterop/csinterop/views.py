@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, render
 from django.core.urlresolvers import reverse
 from rest_framework import viewsets
 from csinterop.forms import InteropServiceForm
-from csinterop.models import SharingProposal
+from csinterop.models import SharingProposal, OauthV1Credentials, User
 from csinterop.serializers import SharingProposalSerializer
 from django.conf import settings
 from oauthlib.common import urldecode, urlencode
@@ -257,11 +257,11 @@ def proposal_result(request):
         return HttpResponseBadRequest(content=response)
 #     password = "mpf17tp45jascoq9q65fk0coe6"
 #     username = "cesk002@gmail.com"
-    if password == "" or username == "":
+    if username == "":
         return HttpResponseBadRequest(content=response)
         return False
-    
-    if accepted:
+        
+    if accepted and password != "":
         # create credentials
         oauth_access_token, oauth_access_token_secret = create_credentials(proposal.recipient, password)
         
@@ -271,7 +271,11 @@ def proposal_result(request):
         # Send the credentials
         url = url_with_querystring(proposal.service.endpoint_credentials, share_id=proposal.key, auth_protocol='oauth',
                                    auth_protocol_version='1.0a', oauth_access_token=oauth_access_token, oauth_access_token_secret=oauth_access_token_secret)
-        
+    elif accepted:
+        user = get_object_or_404(User, name=username)
+        credentials = get_object_or_404(OauthV1Credentials, user=user.email)
+        url = url_with_querystring(proposal.service.endpoint_credentials, share_id=proposal.key, auth_protocol='oauth',
+                                   auth_protocol_version='1.0a', oauth_access_token=credentials.access_token_key, oauth_access_token_secret=credentials.access_token_secret)
         return HttpResponseRedirect(url)
     else:
         return HttpResponse(content='Proposal was denied')
@@ -293,6 +297,12 @@ def proposal_credentials(request):
 
     if auth_protocol == 'oauth' and auth_protocol_version == '1.0a':
         # TODO: get oauth 1.0a parameters and save them for future use
+        proposal = get_object_or_404(SharingProposal, key=share_id)
+        credentials = OauthV1Credentials()
+        credentials.user = proposal.recipient
+        credentials.access_token_key = request.GET.get('oauth_access_token')
+        credentials.access_token_secret = request.GET.get('oauth_access_token_secret')
+        credentials.save()
         # oauth_consumer_key
         # oauth_token
         # oauth_signature_method
