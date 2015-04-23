@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, render
 from django.core.urlresolvers import reverse
 from rest_framework import viewsets
 from csinterop.forms import InteropServiceForm
-from csinterop.models import SharingProposal, OauthV1Credentials, User
+from csinterop.models import SharingProposal, OauthV1Credentials
 from csinterop.serializers import SharingProposalSerializer
 from django.conf import settings
 from oauthlib.common import urldecode, urlencode
@@ -60,10 +60,12 @@ def create_credentials(email, password):
     '''    
     authorize_url = settings.BASE_URL + settings.STACKSYNC_AUTHORIZE_ENDPOINT + '?oauth_token=' + oauth_request_token
     params = urllib.urlencode({'email': email, 'password': password, 'permission':'allow'})
+    print params
     headers = {"Content-Type":"application/x-www-form-urlencoded", "StackSync-API":"v2"}
     response = requests.post(authorize_url, data=params, headers=headers, verify=False)
+    print 'response before if', response
     if "application/x-www-form-urlencoded" == response.headers['Content-Type']:
-        
+        print 'into first if'
         parameters = parse_qs(response.content)
 
         verifier = parameters.get('verifier')[0]
@@ -85,11 +87,12 @@ def create_credentials(email, password):
                                       http_method='GET')
 
         headers['StackSync-API'] = "v2"
+        headers['content-type'] = "plain-text"
         r = requests.get(uri, headers=headers)
         print 'request access toquen: ', r.text 
 
         if 200 < r.status_code >= 300:
-            return False
+            return None, None
         
         credentials = parse_qs(r.content)
 
@@ -98,13 +101,12 @@ def create_credentials(email, password):
         oauth_access_token_secret = credentials.get('oauth_token_secret')[0]
 
         print 'oauth_access_token: ', oauth_access_token, ' oauth_access_token_secret', oauth_access_token_secret
-
+        return oauth_access_token, oauth_access_token_secret
         
     else:
-        return False
+        return None, None
 
         
-    return oauth_access_token, oauth_access_token_secret
     
     
     
@@ -264,21 +266,25 @@ def proposal_result(request):
     if accepted and password != "":
         # create credentials
         oauth_access_token, oauth_access_token_secret = create_credentials(proposal.recipient, password)
-        
+        credentials = OauthV1Credentials()
+        credentials.user = proposal.recipient
+        credentials.access_token_key = oauth_access_token
+        credentials.access_token_secret = oauth_access_token_secret
+        credentials.save()
+        print 'new credentials: oauth_access_token, oauth_access_token_secret'
         if not oauth_access_token or not oauth_access_token_secret:
             return HttpResponse(content='Error occurred while generating the credentials')
 
-        # Send the credentials
-        url = url_with_querystring(proposal.service.endpoint_credentials, share_id=proposal.key, auth_protocol='oauth',
-                                   auth_protocol_version='1.0a', oauth_access_token=oauth_access_token, oauth_access_token_secret=oauth_access_token_secret)
     elif accepted:
-        user = get_object_or_404(User, name=username)
-        credentials = get_object_or_404(OauthV1Credentials, user=user.email)
-        url = url_with_querystring(proposal.service.endpoint_credentials, share_id=proposal.key, auth_protocol='oauth',
-                                   auth_protocol_version='1.0a', oauth_access_token=credentials.access_token_key, oauth_access_token_secret=credentials.access_token_secret)
-        return HttpResponseRedirect(url)
+        credentials = get_object_or_404(OauthV1Credentials, user=proposal.recipient)
+        print 'no pass, credentials'
+
     else:
         return HttpResponse(content='Proposal was denied')
+    
+    url = url_with_querystring(proposal.service.endpoint_credentials, share_id=proposal.key, auth_protocol='oauth',
+                                   auth_protocol_version='1.0a', oauth_access_token=credentials.access_token_key, oauth_access_token_secret=credentials.access_token_secret)
+    return HttpResponseRedirect(url)
 
 
 def proposal_credentials(request):
@@ -298,11 +304,15 @@ def proposal_credentials(request):
     if auth_protocol == 'oauth' and auth_protocol_version == '1.0a':
         # TODO: get oauth 1.0a parameters and save them for future use
         proposal = get_object_or_404(SharingProposal, key=share_id)
-        credentials = OauthV1Credentials()
-        credentials.user = proposal.recipient
-        credentials.access_token_key = request.GET.get('oauth_access_token')
-        credentials.access_token_secret = request.GET.get('oauth_access_token_secret')
-        credentials.save()
+        try:
+            credentials = OauthV1Credentials.objects.get(user=proposal.recipient)
+        except OauthV1Credentials.DoesNotExist:
+            credentials = OauthV1Credentials()
+            credentials.user = proposal.recipient
+            credentials.access_token_key = request.GET.get('oauth_access_token')
+            credentials.access_token_secret = request.GET.get('oauth_access_token_secret')
+            credentials.save()
+        
         # oauth_consumer_key
         # oauth_token
         # oauth_signature_method

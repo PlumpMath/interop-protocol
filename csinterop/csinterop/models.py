@@ -18,20 +18,6 @@ class InteropService(models.Model):
     def __unicode__(self):
         return self.name
 
-
-class User(models.Model):
-    key = modelspg.UUIDField(unique=True, default=uuid.uuid4)
-    name = models.CharField(max_length=200)
-    swift_name = models.CharField(max_length=200)
-    email = models.CharField(max_length=200)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
- 
-    class Meta:
-        db_table = 'cloudspaces_user'
- 
-    def __unicode__(self):
-        return self.name
 # 
 # 
 # class Folder(models.Model):
