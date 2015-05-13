@@ -34,7 +34,7 @@ class InteropService(models.Model):
 
 
 class SharingProposal(models.Model):
-    key = modelspg.UUIDField(unique=True, default=uuid.uuid4)
+    key =  models.CharField(max_length=200, unique=True)
     is_local = models.BooleanField(default=True)
     service = models.ForeignKey(InteropService, related_name='service', blank=True, null=True)
     resource_url = models.CharField(max_length=200)
@@ -65,7 +65,8 @@ class SharingProposal(models.Model):
         return self.key
     
 class OauthV1Credentials(models.Model):
-    user = models.CharField(max_length=200)
+    user =  models.CharField(max_length=200)
+    proposal_key =  models.CharField(max_length=200, unique=True)
     access_token_key = models.CharField(max_length=200)
     access_token_secret = models.CharField(max_length=200)
 

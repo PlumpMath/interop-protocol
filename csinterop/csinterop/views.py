@@ -173,15 +173,26 @@ def proposal_view(request, key):
 
 
 def proposal_share(request):
-    share_id = request.GET.get('share_id')
-    resource_url = request.GET.get('resource_url')
-    owner_name = request.GET.get('owner_name')
-    owner_email = request.GET.get('owner_email')
-    folder_name = request.GET.get('folder_name')
-    permission = request.GET.get('permission')
-    recipient = request.GET.get('recipient')
-    callback = request.GET.get('callback')
-    protocol_version = request.GET.get('protocol_version')
+    if request.method == 'GET':
+        share_id = request.GET.get('share_id')
+        resource_url = request.GET.get('resource_url')
+        owner_name = request.GET.get('owner_name')
+        owner_email = request.GET.get('owner_email')
+        folder_name = request.GET.get('folder_name')
+        permission = request.GET.get('permission')
+        recipient = request.GET.get('recipient')
+        callback = request.GET.get('callback')
+        protocol_version = request.GET.get('protocol_version')
+    elif request.method == 'POST':
+        share_id = request.POST.get('share_id')
+        resource_url = request.POST.get('resource_url')
+        owner_name = request.POST.get('owner_name')
+        owner_email = request.POST.get('owner_email')
+        folder_name = request.POST.get('folder_name')
+        permission = request.POST.get('permission')
+        recipient = request.POST.get('recipient')
+        callback = request.POST.get('callback')
+        protocol_version = request.POST.get('protocol_version')
 
     if share_id is None:
         return HttpResponseBadRequest('share_id is missing')
@@ -268,6 +279,7 @@ def proposal_result(request):
         oauth_access_token, oauth_access_token_secret = create_credentials(proposal.recipient, password)
         credentials = OauthV1Credentials()
         credentials.user = proposal.recipient
+        credentials.proposal_key = proposal.key
         credentials.access_token_key = oauth_access_token
         credentials.access_token_secret = oauth_access_token_secret
         credentials.save()
@@ -304,14 +316,13 @@ def proposal_credentials(request):
     if auth_protocol == 'oauth' and auth_protocol_version == '1.0a':
         # TODO: get oauth 1.0a parameters and save them for future use
         proposal = get_object_or_404(SharingProposal, key=share_id)
-        try:
-            credentials = OauthV1Credentials.objects.get(user=proposal.recipient)
-        except OauthV1Credentials.DoesNotExist:
-            credentials = OauthV1Credentials()
-            credentials.user = proposal.recipient
-            credentials.access_token_key = request.GET.get('oauth_access_token')
-            credentials.access_token_secret = request.GET.get('oauth_access_token_secret')
-            credentials.save()
+       
+        credentials = OauthV1Credentials()
+        credentials.user = proposal.recipient
+        credentials.proposal_key = proposal.key
+        credentials.access_token_key = request.GET.get('oauth_access_token')
+        credentials.access_token_secret = request.GET.get('oauth_access_token_secret')
+        credentials.save()
         
         # oauth_consumer_key
         # oauth_token
