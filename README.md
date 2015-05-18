@@ -7,7 +7,7 @@ The interoperability protocol enables different Personal Clouds to share resourc
 
 Having two Personal Clouds (Personal Cloud 1 and Personal Cloud 2) that wish to interoperate with each other. They must meet the following requirements before using the present specification.
 
-* Once the interoperability process is completed, Personal Clouds must use APIs to access protected resources. In case they do not implement the Storage API proposed in section 5, Personal Cloud 1 must implement an adapter to access Personal Cloud 2 API, and vice versa. We propose some API Storage models:
+* Once the interoperability process is completed, Personal Clouds must use APIs to access protected resources. In case they do not implement the same Storage API, Personal Cloud 1 must implement an adapter to access Personal Cloud 2 API, and vice versa. We propose some API Storage models:
     * [StackSync API](https://github.com/stacksync/swift-API/blob/master/StackSync_API_Specifications.md)
     * [Dropbox API](https://www.dropbox.com/developers/core)
 
